@@ -1,7 +1,7 @@
 ## Dockerfile for Monarch ML Project
 
 ## start with the Docker 'R-base' Debian-based image
-FROM rocker/r-base:latest
+FROM rocker/verse:latest
 
 ## maintainer
 MAINTAINER Keaton Wilson <keatonwilson@me.com>
