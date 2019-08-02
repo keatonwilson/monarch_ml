@@ -1,6 +1,7 @@
 FROM rocker/verse:devel
 MAINTAINER "Carl Boettiger" cboettig@ropensci.org
 
+<<<<<<< HEAD
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     lbzip2 \
@@ -25,6 +26,10 @@ RUN apt-get update \
     sqlite3 \
     tk-dev \
     unixodbc-dev
+=======
+## start with the Docker 'R-base' Debian-based image
+FROM rocker/verse:latest
+>>>>>>> bc5f87e2d5e045856569249ec7795ec0a46fe60d
 
 # Adapted from https://github.com/r-spatial/sf/blob/master/inst/docker/gdal/Dockerfile
 
