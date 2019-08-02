@@ -1,75 +1,119 @@
-## Dockerfile for Monarch ML Project
+FROM rocker/verse:devel
+MAINTAINER "Carl Boettiger" cboettig@ropensci.org
 
-## start with the Docker 'R-base' Debian-based image
-FROM rocker/r-base:latest
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    lbzip2 \
+    libfftw3-dev \
+    libgeos-dev \
+    libgsl0-dev \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    libhdf4-alt-dev \
+    libhdf5-dev \
+    libjq-dev \
+    liblwgeom-dev \
+    libpq-dev \
+    libprotobuf-dev \
+    libnetcdf-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libudunits2-dev \
+    netcdf-bin \
+    postgis \
+    protobuf-compiler \
+    sqlite3 \
+    tk-dev \
+    unixodbc-dev
 
-## maintainer
-MAINTAINER Keaton Wilson <keatonwilson@me.com>
+# Adapted from https://github.com/r-spatial/sf/blob/master/inst/docker/gdal/Dockerfile
 
-## Remain current
-RUN apt-get update -qq \
-&& apt-get dist-upgrade -y
+# PROJ:
+ENV PROJ_VERSION=5.0.0
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-## additional build dependencies
-RUN apt-get install -y --no-install-recommends -t unstable \
-            bwidget \
-      ca-certificates \
-      curl \
-      gdal-bin \
-      git \
-      gsl-bin \
-      libcurl4-openssl-dev \
-      libgdal-dev \
-      libgeos-dev \
-      libgeos++-dev \
-      libproj-dev \
-      libspatialite-dev \
-      libssl-dev \
-      libudunits2-dev \
-      libv8-dev \
-      libxml2-dev \
-      netcdf-bin \
-      pandoc pandoc-citeproc \
-      qpdf \
-      r-cran-rgl \
-      r-cran-tkrplot \
-      xauth \
-      xfonts-base \
-      xvfb \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /var/lib/apt/lists
-  
-## install devtools
-RUN install2.r devtools remotes
+RUN wget http://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz \
+  && tar zxf proj-*tar.gz \
+  && cd proj-${PROJ_VERSION} \
+  && ./configure \
+  && make \
+  && make install \
+  && cd .. \
+  && ldconfig \
+  && rm -rf proj*
 
-#Adding project files to new directory
-RUN mkdir /projects
+# install proj-datumgrid:
+RUN cd /usr/local/share/proj \
+  && wget http://download.osgeo.org/proj/proj-datumgrid-1.8.zip \
+  && unzip -o proj-datumgrid*zip \
+  && rm proj-datumgrid*zip
 
-ADD . /projects
+# GEOS:
+#ENV GEOS_VERSION 3.6.2
+#ENV GEOS_VERSION 3.7.0
+#
+#RUN wget http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2 \
+#  && bzip2 -d geos-*bz2 \
+#  && tar xf geos*tar \
+#  && cd geos* \
+#  && ./configure \
+#  && make \
+#  && make install \
+#  && cd .. \
+#  && ldconfig \
+#  && rm -rf geo*
 
-#R Packages
-RUN xvfb-run -a install.r \
-      tidyverse \
-      caret \
-      geoR \
-      ggmap \
-      ggvis \
-      gstat \
-      mapdata \
-      maps \
-      maptools \
-      plotKML \
-      RandomFields \
-      rgdal \
-      rgeos \
-      sf \
-      shapefiles \
-      sp \
-      spatstat \
-      raster \
-      rasterVis \
-      rts \
-      synthpop \
-&& installGithub.r s-u/fastshp \
-&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+# GDAL:
+ENV GDAL_VERSION=2.4.0
+ENV GDAL_VERSION_NAME=2.4.0
+COPY --from=rocker/gdal /gdal-${GDAL_VERSION} /gdal-${GDAL_VERSION}
+RUN cd gdal-${GDAL_VERSION} \
+  && make install \
+  && cd .. \
+  && ldconfig \
+  && rm -rf gdal*
+
+
+RUN install2.r --error \
+    caret \
+    caretEnsemble \
+    recipes \
+    synthpop \
+    rsample \
+    tidyverse \
+    RColorBrewer \
+    RandomFields \
+    RNetCDF \
+    classInt \
+    deldir \
+    gstat \
+    hdf5r \
+    lidR \
+    mapdata \
+    maptools \
+    mapview \
+    ncdf4 \
+    proj4 \
+    raster \
+    rgdal \
+    rgeos \
+    rlas \
+    sf \
+    sp \
+    spacetime \
+    spatstat \
+    spdep \
+    geoR \
+    geosphere \
+    ## from bioconductor
+    && R -e "BiocManager::install('rhdf5')"
+
+RUN installGithub.r ropensci/spocc 
+
+RUN cd home/rstudio  && mkdir projects \
+&& cd projects \
+&& apt-get install -y sudo curl git \
+&& curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash \
+&& git clone https://github.com/keatonwilson/monarch_ml.git 
+
+RUN sudo chown -R rstudio:rstudio home/rstudio/projects/monarch_ml
