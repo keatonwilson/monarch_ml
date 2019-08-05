@@ -113,6 +113,10 @@ RUN cd home/rstudio  && mkdir projects \
 && cd projects \
 && apt-get install -y sudo curl git \
 && curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash \
-&& git clone https://github.com/keatonwilson/monarch_ml.git 
+&& git clone https://github.com/keatonwilson/monarch_ml.git \
+&& sudo apt-get install git-lfs \
+&& cd monarch_ml \
+&& git lfs install \
+&& git lfs pull
 
 RUN sudo chown -R rstudio:rstudio home/rstudio/projects/monarch_ml
