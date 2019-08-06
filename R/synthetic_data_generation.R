@@ -31,7 +31,7 @@ write_csv(monarch_small, "./data/monarch_data_real.csv")
 smooth_list = as.list(rep("density", 45))
 names(smooth_list) = names(monarch_data)
 
-syn_monarch = synthpop::syn(monarch_small, k = 25000, method = "norm")
+syn_monarch = synthpop::syn(monarch_small, k = 500000, method = "norm")
 
 # compare(syn_monarch, monarch_data)
 
