@@ -12,8 +12,8 @@ library(caretEnsemble)
 library(doParallel)
 
 #parallel processing
-# cores = detectCores()
-# doParallel::registerDoParallel(cores = 2)
+cores = detectCores()
+doParallel::registerDoParallel(cores = cores)
 
 #Set seed
 set.seed(42)
@@ -24,12 +24,6 @@ monarch_real = read_csv("./data/monarch_data_real.csv")
 
 glimpse(monarch_real)
 glimpse(monarch_synth)
-
-#Splitting year off of both
-monarch_synth = monarch_synth %>%
-  dplyr::select(-year)
-monarch_real = monarch_real %>%
-  dplyr::select(-year)
 
 #Don't need to split into training and test, because we already have a test set
 
@@ -55,7 +49,7 @@ write_csv(monarch_test_data, "./data/monarch_test_data.csv")
 
 #Modeling
 #Let's try a simple linear regression first
-train_control = trainControl(method = "repeatedcv", number = 3, repeats = 3)
+train_control = trainControl(method = "repeatedcv", number = 5, repeats = 5)
 
 lm_mod = train(hectares ~ ., data = monarch_train_data,
                method = "lm", trControl = train_control, tuneLength = 10)
@@ -67,7 +61,7 @@ saveRDS(lm_mod, "./output/lm_model.rds")
 #Random forest
 rf_mod = train(hectares ~ ., data = monarch_train_data,
                method = "ranger", trControl = train_control, 
-               tuneLength = 3, verbose = TRUE)
+               tuneLength = 5, verbose = TRUE)
 
 summary(rf_mod)
 rf_mod
@@ -79,7 +73,7 @@ monarch_synth %>%
 
 #xgboost
 xgboost_mod = train(hectares ~ ., data = monarch_train_data,
-                    method = "xgbTree", trControl = train_control, tuneLength = 3)
+                    method = "xgbTree", trControl = train_control, tuneLength = 5)
 
 saveRDS(xgboost_mod, "./output/xgboost_model.rds")
 
