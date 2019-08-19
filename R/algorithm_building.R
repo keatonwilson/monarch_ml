@@ -3,6 +3,11 @@
 #keatonwilson@me.com
 #2019-06-27
 
+# install.packages('ranger')
+# install.packages('XGBoost')
+# install.packages('glmnet')
+# install.packages('xgboost')
+
 #packages
 library(caret)
 library(tidyverse)
@@ -12,8 +17,8 @@ library(caretEnsemble)
 library(doParallel)
 
 #parallel processing
-# cores = detectCores()
-# doParallel::registerDoParallel(cores = 2)
+cores = detectCores()
+doParallel::registerDoParallel(cores = cores-2)
 
 #Set seed
 set.seed(42)
@@ -25,33 +30,31 @@ monarch_real = read_csv("./data/monarch_data_real.csv")
 glimpse(monarch_real)
 glimpse(monarch_synth)
 
-#Splitting year off of both
-monarch_synth = monarch_synth %>%
-  dplyr::select(-year)
-monarch_real = monarch_real %>%
-  dplyr::select(-year)
+# #Don't need to split into training and test, because we already have a test set
+# 
+# #A fair amount of missing, but we can try and impute
+# #Building the recipe
+# monarch_rec = head(monarch_synth) %>%
+#   recipe(hectares ~ .) %>%
+#   step_knnimpute(all_predictors()) %>%
+#   step_nzv(all_predictors()) %>%
+#   step_center(all_predictors()) %>%
+#   step_scale(all_predictors())
+# 
+# 
+# 
+# #Prepping
+# prepped_monarch = prep(monarch_rec, training = monarch_synth, retain = FALSE)
+# 
+# monarch_train_data = bake(prepped_monarch, new_data = monarch_synth)
+# monarch_test_data = bake(prepped_monarch, new_data = monarch_real)
+# rm(prepped_monarch)
+# 
+# write_csv(monarch_train_data, "./data/monarch_train_data.csv")
+# write_csv(monarch_test_data, "./data/monarch_test_data.csv")
 
-#Don't need to split into training and test, because we already have a test set
-
-#A fair amount of missing, but we can try and impute 
-#Building the recipe
-monarch_rec = head(monarch_synth) %>%
-  recipe(hectares ~ .) %>%
-  step_knnimpute(all_predictors()) %>%
-  step_nzv(all_predictors()) %>%
-  step_center(all_predictors()) %>%
-  step_scale(all_predictors()) 
-  
-  
-
-#Prepping
-prepped_monarch = prep(monarch_rec, training = monarch_synth, retain = FALSE)
-
-monarch_train_data = bake(prepped_monarch, new_data = monarch_synth)
-monarch_test_data = bake(prepped_monarch, new_data = monarch_real)
-rm(prepped_monarch)
-write_csv(monarch_train_data, "./data/monarch_train_data.csv")
-write_csv(monarch_test_data, "./data/monarch_test_data.csv")
+monarch_train_data = read_csv("./data/monarch_train_data.csv")
+monarch_test_data = read_csv("./data/monarch_test_data.csv")
 
 #Modeling
 #Let's try a simple linear regression first
@@ -67,7 +70,7 @@ saveRDS(lm_mod, "./output/lm_model.rds")
 #Random forest
 rf_mod = train(hectares ~ ., data = monarch_train_data,
                method = "ranger", trControl = train_control, 
-               tuneLength = 3, verbose = TRUE)
+               tuneLength = 5, verbose = TRUE)
 
 summary(rf_mod)
 rf_mod
@@ -79,7 +82,7 @@ monarch_synth %>%
 
 #xgboost
 xgboost_mod = train(hectares ~ ., data = monarch_train_data,
-                    method = "xgbTree", trControl = train_control, tuneLength = 3)
+                    method = "xgbTree", trControl = train_control, tuneLength = 5)
 
 saveRDS(xgboost_mod, "./output/xgboost_model.rds")
 

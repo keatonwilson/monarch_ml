@@ -124,57 +124,58 @@ lat.range=c(25, 50)        #! Ranges instead of point values. Order does not mat
 lon.range=c(-110, -80)
 
 library(prism)
-
-# get_prism_monthlys(type = "tmax", years = 1999:2019, mon = 1:12, keepZip = FALSE)
-# get_prism_monthlys(type = "tmin", years = 1994:2019, mon = 1:12, keepZip = FALSE)
-# get_prism_monthlys(type = "ppt", years = 1994:2019, mon = 1:12, keepZip = FALSE)
+options(prism.path = "./data/prism_data/")
+get_prism_monthlys(type = "tmax", years = 1994:2019, mon = 1:12, keepZip = FALSE)
+get_prism_monthlys(type = "tmin", years = 1994:2019, mon = 1:12, keepZip = FALSE)
+get_prism_monthlys(type = "ppt", years = 1994:2019, mon = 1:12, keepZip = FALSE)
 
 #Combining lots of data into raster bricks (12 layers per year for each variables (ppt, tmin, tmax))
-# biovar_list = list()
-# year_seq = as.character(seq(from = 1994, to = 2018,  by = 1))
-# 
-# for(i in 1:length(year_seq)) {
-#   year_char = year_seq[i]
-#   ppt_names = ls_prism_data(absPath = TRUE) %>%
-#   filter(str_detect((ls_prism_data(absPath = TRUE))[,2], year_char)) %>%
-#   filter(str_detect(abs_path, "ppt"))
-# 
-#   tmax_names = ls_prism_data(absPath = TRUE) %>%
-#   filter(str_detect((ls_prism_data(absPath = TRUE))[,2], year_char)) %>%
-#   filter(str_detect(abs_path, "tmax"))
-# 
-#   tmin_names = ls_prism_data(absPath = TRUE) %>%
-#   filter(str_detect((ls_prism_data(absPath = TRUE))[,2], year_char)) %>%
-#   filter(str_detect(abs_path, "tmin"))
-# 
-#   ppt_list = list()
-#   for (j in 1:length(ppt_names$abs_path)) {
-#   ppt_list[[j]]= raster(ppt_names$abs_path[j])
-#   }
-# 
-#   tmax_list = list()
-#   for (j in 1:length(tmax_names$abs_path)) {
-#   tmax_list[[j]]= raster(tmax_names$abs_path[j])
-#   }
-# 
-#   tmin_list = list()
-#   for (j in 1:length(tmin_names$abs_path)) {
-#   tmin_list[[j]]= raster(tmin_names$abs_path[j])
-#   }
-# 
-#   ppt_brick = brick(ppt_list)
-#   tmin_brick = brick(tmin_list)
-#   tmax_brick = brick(tmax_list)
-# 
-#   biovars = biovars(prec = ppt_brick, 
-#                   tmin = tmin_brick,
-#                   tmax = tmax_brick)
-#   biovar_list[[i]] = biovars
-# }
-# 
-# #Saving list of biovars for each year
+biovar_list = list()
+year_seq = as.character(seq(from = 1994, to = 2018,  by = 1))
+
+for(i in 1:length(year_seq)) {
+  year_char = year_seq[i]
+  ppt_names = ls_prism_data(absPath = TRUE) %>%
+  filter(str_detect((ls_prism_data(absPath = TRUE))[,2], year_char)) %>%
+  filter(str_detect(abs_path, "ppt"))
+
+  tmax_names = ls_prism_data(absPath = TRUE) %>%
+  filter(str_detect((ls_prism_data(absPath = TRUE))[,2], year_char)) %>%
+  filter(str_detect(abs_path, "tmax"))
+  
+  tmin_names = ls_prism_data(absPath = TRUE) %>%
+  filter(str_detect((ls_prism_data(absPath = TRUE))[,2], year_char)) %>%
+  filter(str_detect(abs_path, "tmin"))
+
+  ppt_list = list()
+  for (j in 1:length(ppt_names$abs_path)) {
+  ppt_list[[j]]= raster(ppt_names$abs_path[j])
+  }
+
+  tmax_list = list()
+  for (j in 1:length(tmax_names$abs_path)) {
+  tmax_list[[j]]= raster(tmax_names$abs_path[j])
+  }
+
+  tmin_list = list()
+  for (j in 1:length(tmin_names$abs_path)) {
+  tmin_list[[j]]= raster(tmin_names$abs_path[j])
+  }
+
+  ppt_brick = brick(ppt_list)
+  tmin_brick = brick(tmin_list)
+  tmax_brick = brick(tmax_list)
+
+  biovars = biovars(prec = ppt_brick,
+                  tmin = tmin_brick,
+                  tmax = tmax_brick)
+  biovar_list[[i]] = biovars
+}
+
+# #Saving list of biovars for each year - actually this doesn't work, because it needs temporary stuff - just read it from memory and soldier on.
 # saveRDS(biovar_list, "./data/biovar.rds")
-biovar_list = readRDS("./data/biovar.rds")
+# biovar_list = readRDS("./data/biovar.rds")
+# 
 #Cropping - Feature #1 Total Area
 lon_min = -110
 lon_max = -80
@@ -210,9 +211,6 @@ names(summary_features) = c("year",
                             "bio_17_whole_range", "bio_18_whole_range", 
                             "bio_19_whole_range")
 monarch_ml_df = left_join(monarch_ml_df, summary_features, by = "year")
-
-monarch_ml_df = monarch_ml_df %>%
-  dplyr::select(year:n_obs_total, bio_1_whole_range:bio_19_whole_range)
 
 #Bioclim for smaller northern range (abvoe 37º)
 
@@ -251,9 +249,6 @@ names(summary_features) = c("year",
                             "bio_17_nange", "bio_18_nrange", 
                             "bio_19_nrange")
 monarch_ml_df = left_join(monarch_ml_df, summary_features, by = "year")
-
-monarch_ml_df = monarch_ml_df %>%
-  dplyr::select(year:n_obs_total, bio_1_whole_range:bio_19_whole_range)
 
 #Saving data set
 write_csv(monarch_ml_df, "./data/monarch_data_real.csv")
