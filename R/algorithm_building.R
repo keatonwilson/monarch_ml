@@ -30,28 +30,28 @@ monarch_real = read_csv("./data/monarch_data_real.csv")
 glimpse(monarch_real)
 glimpse(monarch_synth)
 
-# #Don't need to split into training and test, because we already have a test set
-# 
-# #A fair amount of missing, but we can try and impute
-# #Building the recipe
-# monarch_rec = head(monarch_synth) %>%
-#   recipe(hectares ~ .) %>%
-#   step_knnimpute(all_predictors()) %>%
-#   step_nzv(all_predictors()) %>%
-#   step_center(all_predictors()) %>%
-#   step_scale(all_predictors())
-# 
-# 
-# 
-# #Prepping
-# prepped_monarch = prep(monarch_rec, training = monarch_synth, retain = FALSE)
-# 
-# monarch_train_data = bake(prepped_monarch, new_data = monarch_synth)
-# monarch_test_data = bake(prepped_monarch, new_data = monarch_real)
-# rm(prepped_monarch)
-# 
-# write_csv(monarch_train_data, "./data/monarch_train_data.csv")
-# write_csv(monarch_test_data, "./data/monarch_test_data.csv")
+#Don't need to split into training and test, because we already have a test set
+
+#A fair amount of missing, but we can try and impute
+#Building the recipe
+monarch_rec = head(monarch_synth) %>%
+  recipe(hectares ~ .) %>%
+  step_knnimpute(all_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())
+
+
+
+#Prepping
+prepped_monarch = prep(monarch_rec, training = monarch_synth, retain = FALSE)
+
+monarch_train_data = bake(prepped_monarch, new_data = monarch_synth)
+monarch_test_data = bake(prepped_monarch, new_data = monarch_real)
+rm(prepped_monarch)
+
+write_csv(monarch_train_data, "./data/monarch_train_data.csv")
+write_csv(monarch_test_data, "./data/monarch_test_data.csv")
 
 monarch_train_data = read_csv("./data/monarch_train_data.csv")
 monarch_test_data = read_csv("./data/monarch_test_data.csv")
