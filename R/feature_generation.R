@@ -252,3 +252,27 @@ monarch_ml_df = left_join(monarch_ml_df, summary_features, by = "year")
 
 #Saving data set
 write_csv(monarch_ml_df, "./data/monarch_data_real.csv")
+
+#More mods
+monarch_ml_df = read_csv("./data/monarch_data_real.csv")
+
+# We need to scale by sampling effort for n_obs_total
+# Let's find the total number of butterflies records per year
+library(spocc)
+
+effort = c()
+
+for(i in 1:length(monarch_ml_df$year)){
+  sub = occ(query = "Lepidoptera", 
+             from = "gbif", 
+             limit = 1, 
+             gbifopts = list(country = 'US', year = monarch_ml_df$year[i]))
+  
+  effort[i] = sub$gbif$meta$found
+}
+
+monarch_ml_df$effort = effort
+
+monarch_ml_df = monarch_ml_df %>%
+  mutate(scaled_obs = n_obs_total/effort) %>%
+  dplyr::select(-n_obs_total)
