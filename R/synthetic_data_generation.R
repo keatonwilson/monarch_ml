@@ -21,7 +21,7 @@ monarch_data = monarch_data %>%
 
 monarch_small = monarch_data %>%
   dplyr::select(hectares, day_first_sighting, obs_37_norm, active_months_obs_norm,
-                n_obs_total,
+                scaled_obs,
                 contains("_8"), contains("_14"), contains("_19"), 
                 contains("_5"), contains("_37"), contains("_2"), 
                 contains("_10"), contains("_12"), contains("_15")) %>%
@@ -65,29 +65,3 @@ ggplot(data = syn_monarch$syn %>%
 ggplot(data = monarch_small, aes(x = log(hectares))) +
   geom_density(fill = "blue", alpha = 0.6)
 
-#Problematic. Can we generate synthetic data better way by fitting distributions for each variable and then drawing?
-library(fitdistrplus)
-
-par(mfrow = c(1,1))
-descdist(monarch_data$hectares, discrete=FALSE, boot = 500)
-
-fit_ln = fitdist(monarch_data$hectares, "lnorm")
-fit_g = fitdist(monarch_data$hectares, "gamma")
-fit_w = fitdist(monarch_data$hectares, "weibull")
-
-par(mfrow=c(2,2))
-plot.legend <- c("Weibull", "lognormal", "gamma")
-denscomp(list(fit_w, fit_g, fit_ln), legendtext = plot.legend)
-cdfcomp (list(fit_w, fit_g, fit_ln), legendtext = plot.legend)
-qqcomp  (list(fit_w, fit_g, fit_ln), legendtext = plot.legend)
-ppcomp  (list(fit_w, fit_g, fit_ln), legendtext = plot.legend)
-
-
-
-lnorm = data.frame(to_plot = rlnorm(n = 100, meanlog = fit_ln$estimate[1], sdlog = fit_ln$estimate[2]))
-weibull = data.frame(to_plot = rweibull(n = 100, shape = fit_w$estimate[1], scale = fit_w$estimate[2]))
-ggplot(data = monarch_small, aes(x = hectares)) +
-  geom_density(fill = "blue", alpha = 0.7) +
-  geom_density(data = lnorm, aes(x = to_plot), fill = "yellow", alpha = 0.7) +
-  geom_density(data = weibull, aes(x = to_plot), fill = "pink", alpha = 0.7)
-  

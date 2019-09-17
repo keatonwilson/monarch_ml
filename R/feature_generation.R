@@ -276,3 +276,5 @@ monarch_ml_df$effort = effort
 monarch_ml_df = monarch_ml_df %>%
   mutate(scaled_obs = n_obs_total/effort) %>%
   dplyr::select(-n_obs_total)
+
+write_csv(monarch_ml_df, "./data/monarch_data_real.csv")
